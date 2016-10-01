@@ -24,15 +24,17 @@ from configparser import ConfigParser
 
 
 class Configuration:
-    CONFIG_FILE = 'sms.ini'
+    CONFIG_FILE = '..\sms.ini'
     RX_EOL = "\r\n"
     RX_OK = re.compile(r'OK')
     RX_ERROR = re.compile(r'ERROR|(\+CM[ES] ERROR: \d+)|(COMMAND NOT SUPPORT)')
+    TXT_DELIM = '| '
 
     log = logging.getLogger('smsresender.Configuration')
 
     modem = None
     rx = None
+    mail = None
     timeout = None
 
     parser = ConfigParser()
@@ -43,6 +45,7 @@ class Configuration:
 
         self.modem = Modem(self.parser)
         self.rx = Rx(self.parser)
+        self.mail = MailConfig(self.parser)
         self.timeout = int(self.parser.get('global', 'timeout'))
 
         self.log.debug('timeout: %s', self.timeout)
@@ -76,4 +79,26 @@ class Rx:
 
     def __init__(self, config):
         self.waiting = int(config.get('rx', 'waiting'))
+        self.readAll = config.get('rx', 'read_all')
+        self.readUnread = config.get('rx', 'read_unread')
+
         self.log.debug('Read waitinf: %s', self.waiting)
+
+
+class MailConfig:
+    smtp = ''
+    port = 0
+    user = ''
+    password = ''
+    fromMail = ''
+    toMail = ''
+    debuglevel = False
+
+    def __init__(self, config):
+        self.smtp = config.get('mail', 'smtp')
+        self.port = int(config.get('mail', 'port'))
+        self.user = config.get('mail', 'user')
+        self.password = config.get('mail', 'password')
+        self.fromMail = config.get('mail', 'from')
+        self.toMail = config.get('mail', 'to')
+        self.debuglevel = eval(config.get('mail', 'debuglevel'))

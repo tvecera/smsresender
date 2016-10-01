@@ -21,6 +21,7 @@
 import logging
 import serial
 import time
+from sms import Sms
 
 
 class Modem:
@@ -43,25 +44,50 @@ class Modem:
         for command in self.config.modem.initcommands:
             self.write(command)
 
-    def write(self, command):
+    def readsms(self):
+        cmd = self.config.rx.readUnread
+        self.conn.flushInput()
+        self.conn.flushOutput()
+
+        self.write(cmd, False)
+        data = self.read()
+        # Start from 1, first item isn't SMS message (b')
+        smslist = data.split('+CMGL:')[1:]
+        result = []
+        for item in smslist:
+            result.append(Sms(item, self.config))
+
+        return result
+
+    def write(self, command, checkresponse=True):
         cmd = (command + self.config.RX_EOL).encode('ascii')
         self.log.debug('IN: [%s]', cmd)
         self.conn.write(cmd)
-        self.checkresponse()
+        if checkresponse:
+            return self.checkresponse()
+
+        return False
 
     def checkresponse(self):
-        data = ''
-        time.sleep(self.config.rx.waiting)
-        while self.conn.in_waiting > 0:
-            data += str(self.conn.read(self.conn.in_waiting))
-
-        data = data.replace('\\r', ' ').replace('\\n', ' ')
+        data = self.read()
 
         if self.config.RX_ERROR.search(data):
             self.log.error('RESPONSE: ERROR [%s]', data)
         elif self.config.RX_OK.search(data):
             self.log.debug('RESPONSE: OK')
+            return True
         else:
             self.log.error('RESPONSE: EMPTY [%s]', data)
+
+        return False
+
+    def read(self):
+        data = ''
+        time.sleep(self.config.rx.waiting)
+        while self.conn.in_waiting > 0:
+            data += str(self.conn.read(self.conn.in_waiting))
+            self.log.debug('[%s]', data)
+
+        data = data.replace('\\r', '').replace('\\n', self.config.TXT_DELIM)
 
         return data

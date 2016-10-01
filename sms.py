@@ -20,18 +20,36 @@
 
 import logging
 
-from params import Configuration
-from modem import Modem
 
-log = logging.getLogger('smsresender.sms')
+class Sms:
+    log = logging.getLogger('smsresender.Sms')
 
+    id = 0
+    status = None
+    fromPhone = None
+    fromContact = None
+    date = None
+    time = None
+    msg = None
+    original = None
 
-def main():
-    logging.basicConfig(format='%(asctime)s - %(levelname)s: %(message)s', level=logging.DEBUG)
-    log.debug('Start...')
-    config = Configuration()
-    Modem(config)
+    def __init__(self, rx, config):
+        self.original = rx
+        result = rx.split(config.TXT_DELIM)
+        self.parseheader(result[0])
+        self.parsemsg(result[1])
+        self.log.debug('SMS: [%s, %s, %s, %s, %s]', self.id, self.status, self.fromPhone,
+                       self.date + ' ' + self.time, self.msg)
 
+    def parseheader(self, rx):
+        rx = rx.replace('"', '')
+        header = rx.split(',')
+        self.id = int(header[0].lstrip())
+        self.status = header[1]
+        self.fromPhone = header[2]
+        self.date = header[4]
+        self.time = header[5]
 
-if __name__ == '__main__':
-    main()
+    def parsemsg(self, rx):
+        sms = rx.split('|')
+        self.msg = sms[0].lstrip()

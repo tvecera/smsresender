@@ -8,7 +8,7 @@ Script run on my Raspberry Pi and it runs every minute over CRON scheduler.
 
 There're lots of things to do (this is just a first functional version).
 
-* Backup SMS to the gmail mailbox
+~~* Backup SMS to the gmail mailbox
 * Read Google Contacts and convert phone numbers from SMS to theirs contacts names.
 * Errors notification
 * Automatic identify GPRS modem port
@@ -19,11 +19,12 @@ TODO: Describe the installation process
 
 ## Usage
 
-TODO: Write usage instructions
+Run `python run.py`
 
 ## History
 
 1.0: Initial version without mail backup. Script only reads SMS messages from modem.
+1.0: Initial version with mail backup.
 
 ## Credits
 
