@@ -42,15 +42,20 @@ class Modem:
 
         # Init modem eg. turn off echo, sms text mode
         for command in self.config.modem.initcommands:
-            self.write(command)
+            if not self.write(command):
+                msg = 'Problem with modem initialization [%s]' % command
+                self.log.error(msg)
+                raise Exception(msg)
 
     def readsms(self):
-        cmd = self.config.rx.readUnread
+        cmd = self.config.rx.readAll
         self.conn.flushInput()
         self.conn.flushOutput()
 
+        # Cannot check response, because in response are SMS data
         self.write(cmd, False)
         data = self.read()
+
         # Start from 1, first item isn't SMS message (b')
         smslist = data.split('+CMGL:')[1:]
         result = []
@@ -60,6 +65,18 @@ class Modem:
             result.append(Sms(item, self.config))
 
         return result
+
+    def deletesms(self, smsid):
+        cmd = self.config.rx.delete + str(smsid)
+        self.conn.flushInput()
+        self.conn.flushOutput()
+
+        self.log.debug('Deleting SMS with id: %s', smsid)
+
+        if not self.write(cmd, True):
+            msg = 'Error during delete SMS with ID [%s]' % smsid
+            self.log.error(msg)
+            raise Exception(msg)
 
     def write(self, command, checkresponse=True):
         cmd = (command + self.config.RX_EOL).encode('ascii')
@@ -72,16 +89,17 @@ class Modem:
 
     def checkresponse(self):
         data = self.read()
+        result = False
 
         if self.config.RX_ERROR.search(data):
             self.log.error('RESPONSE: ERROR [%s]', data)
         elif self.config.RX_OK.search(data):
             self.log.debug('RESPONSE: OK')
-            return True
+            result = True
         else:
             self.log.error('RESPONSE: EMPTY [%s]', data)
 
-        return False
+        return result
 
     def read(self):
         data = ''

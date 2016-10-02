@@ -19,7 +19,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+import sys
 
+from serial import SerialException
 from params import Configuration
 from modem import Modem
 from mail import Mail
@@ -29,16 +31,29 @@ log = logging.getLogger('smsresender.run')
 
 
 def main():
-    logging.basicConfig(format='%(asctime)s - %(levelname)s: %(message)s', level=logging.DEBUG)
+    logging.basicConfig(filename='smsresender.log', format='%(asctime)s - %(levelname)s: %(message)s',
+                        level=logging.DEBUG)
     log.debug('Start...')
-    config = Configuration()
-    modem = Modem(config)
-    sms = modem.readsms()
-    mail = Mail(config)
-    contacts = Contacts(config)
-    for item in sms:
-        item.fromContact = contacts.readcontactfromfile(item)
-        mail.notify(item)
+
+    try:
+        config = Configuration()
+        modem = Modem(config)
+        sms = modem.readsms()
+
+        mail = Mail(config)
+        contacts = Contacts(config)
+
+        for item in sms:
+            item.fromContact = contacts.readcontactfromfile(item)
+            mail.notify(item)
+            # Delete notified SMS
+            modem.deletesms(item.id)
+
+    except SerialException as e:
+        log.error('Problem with connection to modem: %s', e.strerror)
+        sys.exit('Error occurred, please check log file!!!')
+    except Exception:
+        sys.exit('Error occurred, please check log file!!!')
 
 
 if __name__ == '__main__':

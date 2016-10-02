@@ -21,10 +21,11 @@
 import logging
 import re
 from configparser import ConfigParser
+from configparser import NoOptionError, NoSectionError
 
 
 class Configuration:
-    CONFIG_FILE = 'sms.ini'
+    CONFIG_FILE = '../sms.ini'
     RX_EOL = "\r\n"
     RX_OK = re.compile(r'OK')
     RX_ERROR = re.compile(r'ERROR|(\+CM[ES] ERROR: \d+)|(COMMAND NOT SUPPORT)')
@@ -42,13 +43,17 @@ class Configuration:
 
     def __init__(self):
         self.log.debug('Read confing file... %s', self.CONFIG_FILE)
-        self.parser.read(self.CONFIG_FILE)
 
-        self.modem = Modem(self.parser)
-        self.rx = Rx(self.parser)
-        self.mail = MailConfig(self.parser)
-        self.contacts = Contacts(self.parser)
-        self.timeout = int(self.parser.get('global', 'timeout'))
+        try:
+            self.parser.read(self.CONFIG_FILE)
+            self.modem = Modem(self.parser)
+            self.rx = Rx(self.parser)
+            self.mail = MailConfig(self.parser)
+            self.contacts = Contacts(self.parser)
+            self.timeout = int(self.parser.get('global', 'timeout'))
+        except (NoOptionError, NoSectionError) as e:
+            self.log.error('Error in configuration file... %s', e.message)
+            raise
 
         self.log.debug('timeout: %s', self.timeout)
 
@@ -78,11 +83,13 @@ class Rx:
     readAll = ''
     readUnread = ''
     readRead = ''
+    delete = ''
 
     def __init__(self, config):
         self.waiting = int(config.get('rx', 'waiting'))
         self.readAll = config.get('rx', 'read_all')
         self.readUnread = config.get('rx', 'read_unread')
+        self.delete = config.get('rx', 'delete')
 
         self.log.debug('Read waitinf: %s', self.waiting)
 

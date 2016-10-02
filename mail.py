@@ -54,4 +54,6 @@ Subject: %s
 
             self.log.debug('Email sent')
         except:
-            self.log.error('Problem with sending email notification...')
+            msg = 'Problem with sending email notification... SMS[%s,%s,%s]' % (sms.id, sms.fromPhone, sms.msg)
+            self.log.error(msg)
+            raise Exception(msg)
