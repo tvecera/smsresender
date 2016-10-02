@@ -54,6 +54,8 @@ class Modem:
         # Start from 1, first item isn't SMS message (b')
         smslist = data.split('+CMGL:')[1:]
         result = []
+        self.log.debug('Number of SMS: %s', len(smslist))
+
         for item in smslist:
             result.append(Sms(item, self.config))
 

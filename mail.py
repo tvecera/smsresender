@@ -20,6 +20,7 @@
 
 import smtplib
 import logging
+import base64
 
 
 class Mail:
@@ -31,7 +32,9 @@ class Mail:
         self.config = config
 
     def notify(self, sms):
-        subject = 'SMS - %s - %s' % (sms.fromContact, sms.fromPhone)
+        # Quick fix problem with UTF codepage in subject, I can't believe that I have to do this in 2016 (RFC 1342)
+        name = '=?utf-8?B?' + base64.b64encode(sms.fromContact.encode('utf-8')).decode('ascii') + '?='
+        subject = 'SMS - %s - %s' % (name, sms.fromPhone)
         body = sms.msg
         email_text = """\
 From: %s

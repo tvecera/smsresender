@@ -35,6 +35,7 @@ class Configuration:
     modem = None
     rx = None
     mail = None
+    contacts = None
     timeout = None
 
     parser = ConfigParser()
@@ -46,6 +47,7 @@ class Configuration:
         self.modem = Modem(self.parser)
         self.rx = Rx(self.parser)
         self.mail = MailConfig(self.parser)
+        self.contacts = Contacts(self.parser)
         self.timeout = int(self.parser.get('global', 'timeout'))
 
         self.log.debug('timeout: %s', self.timeout)
@@ -102,3 +104,10 @@ class MailConfig:
         self.fromMail = config.get('mail', 'from')
         self.toMail = config.get('mail', 'to')
         self.debuglevel = eval(config.get('mail', 'debuglevel'))
+
+
+class Contacts:
+    file = ''
+
+    def __init__(self, config):
+        self.file = config.get('contacts', 'file')

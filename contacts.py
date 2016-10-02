@@ -20,26 +20,27 @@
 
 import logging
 
-from params import Configuration
-from modem import Modem
-from mail import Mail
-from contacts import Contacts
 
-log = logging.getLogger('smsresender.run')
+class Contacts:
+    log = logging.getLogger('smsresender.Contacts')
 
+    config = None
 
-def main():
-    logging.basicConfig(format='%(asctime)s - %(levelname)s: %(message)s', level=logging.DEBUG)
-    log.debug('Start...')
-    config = Configuration()
-    modem = Modem(config)
-    sms = modem.readsms()
-    mail = Mail(config)
-    contacts = Contacts(config)
-    for item in sms:
-        item.fromContact = contacts.readcontactfromfile(item)
-        mail.notify(item)
+    def __init__(self, config):
+        self.config = config
 
+    def readcontactfromfile(self, sms):
+        result = []
+        with open(self.config.contacts.file, 'rb') as f:
+            for row in f:
+                row = row.decode('utf-8').split(';')
+                # Quick fix for Windows platform, UNIX LF
+                row[3] = row[3].replace('\n', '')
+                if row[3] == sms.fromPhone.replace('+', ''):
+                    result = row
+        out = ''
+        if len(result) > 0:
+            out = '%s %s %s' % (result[2], result[0], result[1])
+        self.log.debug('Contact for phone %s: %s', sms.fromPhone, out)
 
-if __name__ == '__main__':
-    main()
+        return out
