@@ -24,7 +24,7 @@ from configparser import ConfigParser
 
 
 class Configuration:
-    CONFIG_FILE = '..\sms.ini'
+    CONFIG_FILE = 'sms.ini'
     RX_EOL = "\r\n"
     RX_OK = re.compile(r'OK')
     RX_ERROR = re.compile(r'ERROR|(\+CM[ES] ERROR: \d+)|(COMMAND NOT SUPPORT)')
