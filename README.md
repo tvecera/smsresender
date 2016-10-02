@@ -15,7 +15,7 @@ There're lots of things to do (this is just a first functional version).
 * Automatic identify GPRS modem port
 * Forward SMS to another mobile number
 * Send notification about internet outage, problem with email
-* Change SMS status to unread, if error with mail, forwarding occurred
+* ~~Change SMS status to unread, if error with mail, forwarding occurred~~
 * Create daemon for checking new SMS messages (currently periodically runs by CRON)
 * Notification templates
 
